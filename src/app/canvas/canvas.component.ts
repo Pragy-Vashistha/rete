@@ -36,12 +36,14 @@ export class CanvasComponent implements AfterViewInit {
 
   addNode(): void {
     if (this.editorInstance && this.editorInstance.addNode) {
-      const randomX = Math.random() * 500;
-      const randomY = Math.random() * 500;
+      const randomX = Math.random() * 1000 - 500; // Range: -500 to 500
+      const randomY = Math.random() * 1000 - 500; // Range: -500 to 500
       this.editorInstance
         .addNode(`Node ${++nodeId}`, randomX, randomY)
         .then((node: any) => {
           console.log(`Added new node: ${node.label}`);
+          // Zoom to fit all nodes after adding a new one
+          this.editorInstance.zoomAt(this.editorInstance.getNodes());
         })
         .catch((error: any) => {
           console.error('Failed to add node:', error);

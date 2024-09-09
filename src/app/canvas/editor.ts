@@ -36,7 +36,6 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
 
   AreaExtensions.simpleNodesOrder(area);
 
-  // Create Node A with Output 'out'
   const a = new ClassicPreset.Node('A');
   a.addControl(
     'a',
@@ -45,7 +44,6 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
   a.addOutput('out', new ClassicPreset.Output(socket));
   await editor.addNode(a);
 
-  // Create Node B with Input 'in'
   const b = new ClassicPreset.Node('B');
   b.addControl(
     'b',
@@ -54,7 +52,6 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
   b.addInput('in', new ClassicPreset.Input(socket));
   await editor.addNode(b);
 
-  // Move Node B to position
   await area.translate(b.id, { x: 320, y: 0 });
 
   // Create Connection between Node A's 'out' and Node B's 'in'
