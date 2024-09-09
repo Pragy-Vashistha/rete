@@ -42,8 +42,7 @@ export class CanvasComponent implements AfterViewInit {
         .addNode(`Node ${++nodeId}`, randomX, randomY)
         .then((node: any) => {
           console.log(`Added new node: ${node.label}`);
-          // Zoom to fit all nodes after adding a new one
-          this.editorInstance.zoomAt(this.editorInstance.getNodes());
+          // Remove the zoomAt call as we don't have access to getNodes here
         })
         .catch((error: any) => {
           console.error('Failed to add node:', error);

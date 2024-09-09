@@ -6,6 +6,9 @@ import {
   Presets as ConnectionPresets,
 } from 'rete-connection-plugin';
 import { AngularPlugin, Presets, AngularArea2D } from 'rete-angular-plugin/16';
+import { CounterControlComponent } from '../counter-control/counter-control.component';
+import { RemoveConnectionsButtonControl } from '../controls/remove-connections-button.control';
+import { RemoveConnectionsButtonComponent } from '../remove-connections-button/remove-connections-button.component';
 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
@@ -13,60 +16,90 @@ type Schemes = GetSchemes<
 >;
 type AreaExtra = AngularArea2D<Schemes>;
 
-let nodeId = 0;
-
 export async function createEditor(container: HTMLElement, injector: Injector) {
   const socket = new ClassicPreset.Socket('socket');
 
+  // Create editor and plugins
   const editor = new NodeEditor<Schemes>();
   const area = new AreaPlugin<Schemes, AreaExtra>(container);
   const connection = new ConnectionPlugin<Schemes, AreaExtra>();
   const render = new AngularPlugin<Schemes, AreaExtra>({ injector });
 
+  // Configure area extensions
   AreaExtensions.selectableNodes(area, AreaExtensions.selector(), {
     accumulating: AreaExtensions.accumulateOnCtrl(),
   });
 
+  // Add presets
   render.addPreset(Presets.classic.setup());
   connection.addPreset(ConnectionPresets.classic.setup());
+  render.addPreset(
+    Presets.classic.setup({
+      customize: {
+        control: (data) => {
+          if (data.payload instanceof RemoveConnectionsButtonControl) {
+            return RemoveConnectionsButtonComponent;
+          }
+          return null;
+        },
+      },
+    })
+  );
 
+  // Use plugins
   editor.use(area);
   area.use(connection);
   area.use(render);
 
-  AreaExtensions.simpleNodesOrder(area);
+  // Basic node setup
+  const nodeA = createNode('A', 'hello', socket, true);
+  const nodeB = createNode('B', 'hello', socket, true); // true indicates it has an input
 
-  const a = new ClassicPreset.Node('A');
-  a.addControl(
-    'a',
-    new ClassicPreset.InputControl('text', { initial: 'hello' })
-  );
-  a.addOutput('out', new ClassicPreset.Output(socket));
-  await editor.addNode(a);
+  await editor.addNode(nodeA);
+  await editor.addNode(nodeB);
 
-  const b = new ClassicPreset.Node('B');
-  b.addControl(
-    'b',
-    new ClassicPreset.InputControl('text', { initial: 'hello' })
-  );
-  b.addInput('in', new ClassicPreset.Input(socket));
-  await editor.addNode(b);
-
-  await area.translate(b.id, { x: 320, y: 0 });
+  await area.translate(nodeB.id, { x: 320, y: 0 });
 
   // Create Connection between Node A's 'out' and Node B's 'in'
-  await editor.addConnection(new ClassicPreset.Connection(a, 'out', b, 'in'));
+  await editor.addConnection(
+    new ClassicPreset.Connection(nodeA, 'out', nodeB, 'in')
+  );
 
   AreaExtensions.zoomAt(area, editor.getNodes());
 
-  const addNode = async (name: string, x: number, y: number) => {
+  // Function to create a node
+  function createNode(
+    name: string,
+    initialValue: string,
+    socket: ClassicPreset.Socket,
+    hasInput: boolean = false
+  ) {
     const node = new ClassicPreset.Node(name);
+
+    console.log('Creating node', node);
+
+    // Attach custom CounterControlComponent to the node
+    node.addControl('counter', new CounterControlComponent());
+
+    node.addControl(
+      'remove-connections',
+      new RemoveConnectionsButtonControl(editor, 'remove-connections', node)
+    );
+
     node.addControl(
       'text',
-      new ClassicPreset.InputControl('text', { initial: name })
+      new ClassicPreset.InputControl('text', { initial: initialValue })
     );
-    node.addInput('in', new ClassicPreset.Input(socket));
+    if (hasInput) {
+      node.addInput('in', new ClassicPreset.Input(socket));
+    }
     node.addOutput('out', new ClassicPreset.Output(socket));
+    return node;
+  }
+
+  // Function to add a new node dynamically
+  const addNode = async (name: string, x: number, y: number) => {
+    const node = createNode(name, name, socket);
     await editor.addNode(node);
     await area.translate(node.id, { x, y });
     return node;
