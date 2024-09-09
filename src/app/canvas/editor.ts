@@ -9,12 +9,14 @@ import { AngularPlugin, Presets, AngularArea2D } from 'rete-angular-plugin/16';
 import { CounterControlComponent } from '../counter-control/counter-control.component';
 import { RemoveConnectionsButtonControl } from '../controls/remove-connections-button.control';
 import { RemoveConnectionsButtonComponent } from '../remove-connections-button/remove-connections-button.component';
+import { setupPanningBoundary } from './panning-boundary';
 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
   ClassicPreset.Connection<ClassicPreset.Node, ClassicPreset.Node>
 >;
 type AreaExtra = AngularArea2D<Schemes>;
+type Area = AreaPlugin<Schemes, AreaExtra>;
 
 export async function createEditor(container: HTMLElement, injector: Injector) {
   const socket = new ClassicPreset.Socket('socket');
@@ -25,9 +27,18 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
   const connection = new ConnectionPlugin<Schemes, AreaExtra>();
   const render = new AngularPlugin<Schemes, AreaExtra>({ injector });
 
+  const selector = AreaExtensions.selector();
   // Configure area extensions
-  AreaExtensions.selectableNodes(area, AreaExtensions.selector(), {
+  AreaExtensions.selectableNodes(area, selector, {
     accumulating: AreaExtensions.accumulateOnCtrl(),
+  });
+
+  const panningBoundary = setupPanningBoundary({
+    editor,
+    area,
+    selector: AreaExtensions.selector(),
+    padding: 50,
+    intensity: 3,
   });
 
   // Add presets
@@ -106,7 +117,11 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
   };
 
   return {
-    destroy: () => area.destroy(),
+    destroy: () => {
+      area.destroy();
+      panningBoundary.destroy();
+    },
     addNode,
+    zoomToFit: () => AreaExtensions.zoomAt(area, editor.getNodes()),
   };
 }
