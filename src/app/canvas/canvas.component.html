@@ -1,6 +1,19 @@
-<div>
-  <button (click)="addNode()">Add Node</button>
-  <div class="rete-container">
-    <div class="rete" #rete></div>
+<div class="canvas-container">
+  <app-preset-nodes-drawer
+    (nodeDragged)="handlePresetNodeDragged($event)"
+  ></app-preset-nodes-drawer>
+  <div class="editor-container">
+    <div class="button-group">
+      <button (click)="addNode()">Add Node</button>
+      <button (click)="exportToJSON()">Export Graph</button>
+      <button (click)="importFromJSON(jsonInput.value)">Import Graph</button>
+      <button (click)="deleteAllNodes()" class="delete-button">
+        Delete All Nodes
+      </button>
+    </div>
+    <textarea #jsonInput placeholder="Paste JSON here to import"></textarea>
+    <div class="rete-container">
+      <div class="rete" #rete></div>
+    </div>
   </div>
 </div>

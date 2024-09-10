@@ -1,0 +1,14 @@
+<div class="preset-nodes-drawer">
+  <h3>Preset Nodes</h3>
+  <div cdkDropList cdkDropListSortingDisabled>
+    <div
+      *ngFor="let node of presetNodes"
+      class="preset-node"
+      cdkDrag
+      [cdkDragData]="node"
+      (cdkDragEnded)="onDragEnded($event)"
+    >
+      {{ node.label }}
+    </div>
+  </div>
+</div>

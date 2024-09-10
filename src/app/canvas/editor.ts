@@ -11,6 +11,24 @@ import { RemoveConnectionsButtonControl } from '../controls/remove-connections-b
 import { RemoveConnectionsButtonComponent } from '../remove-connections-button/remove-connections-button.component';
 import { setupPanningBoundary } from './panning-boundary';
 
+// Add these new interfaces
+interface SimpleNodeData {
+  id: string;
+  name: string;
+  position: { x: number; y: number };
+  hasInput: boolean;
+}
+
+interface SimpleConnectionData {
+  sourceId: string;
+  targetId: string;
+}
+
+interface SimpleGraphData {
+  nodes: SimpleNodeData[];
+  connections: SimpleConnectionData[];
+}
+
 type Schemes = GetSchemes<
   ClassicPreset.Node,
   ClassicPreset.Connection<ClassicPreset.Node, ClassicPreset.Node>
@@ -116,6 +134,59 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
     return node;
   };
 
+  // Add these new functions
+  const importSimpleGraph = async (graphData: SimpleGraphData) => {
+    for (const nodeData of graphData.nodes) {
+      const node = createNode(
+        nodeData.name,
+        nodeData.name,
+        socket,
+        nodeData.hasInput
+      );
+      await editor.addNode(node);
+      await area.translate(node.id, nodeData.position);
+    }
+
+    for (const connData of graphData.connections) {
+      const source = editor
+        .getNodes()
+        .find((node) => node.label === connData.sourceId);
+      const target = editor
+        .getNodes()
+        .find((node) => node.label === connData.targetId);
+      if (source && target) {
+        await editor.addConnection(
+          new ClassicPreset.Connection(source, 'out', target, 'in')
+        );
+      }
+    }
+
+    AreaExtensions.zoomAt(area, editor.getNodes());
+  };
+
+  const exportSimpleGraph = (): SimpleGraphData => {
+    const nodes = editor.getNodes();
+    const connections = editor.getConnections();
+
+    return {
+      nodes: nodes.map((node) => ({
+        id: node.id,
+        name: node.label,
+        position: area.nodeViews.get(node.id)?.position || { x: 0, y: 0 },
+        hasInput: 'in' in node.inputs,
+      })),
+      connections: connections.map((conn) => ({
+        sourceId: (editor.getNode(conn.source) as ClassicPreset.Node).label,
+        targetId: (editor.getNode(conn.target) as ClassicPreset.Node).label,
+      })),
+    };
+  };
+
+  const clear = () => {
+    editor.clear();
+    AreaExtensions.zoomAt(area, editor.getNodes());
+  };
+
   return {
     destroy: () => {
       area.destroy();
@@ -123,5 +194,8 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
     },
     addNode,
     zoomToFit: () => AreaExtensions.zoomAt(area, editor.getNodes()),
+    importSimpleGraph,
+    exportSimpleGraph,
+    clear,
   };
 }
