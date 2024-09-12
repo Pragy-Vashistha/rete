@@ -7,6 +7,13 @@ import { CounterControlComponent } from './counter-control/counter-control.compo
 import { RemoveConnectionsButtonComponent } from './remove-connections-button/remove-connections-button.component';
 import { PresetNodesDrawerComponent } from './preset-nodes-drawer/preset-nodes-drawer.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { ConnectionPopupComponent } from './connection-popup/connection-popup.component';
+import { ConnectionButtonComponent } from './connection-button/connection-button.component';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
   declarations: [
@@ -15,8 +22,20 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
     CounterControlComponent,
     RemoveConnectionsButtonComponent,
     PresetNodesDrawerComponent,
+    ConnectionPopupComponent,
+    ConnectionButtonComponent,
   ],
-  imports: [BrowserModule, AppRoutingModule, DragDropModule],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    DragDropModule,
+    BrowserAnimationsModule,
+    MatListModule,
+    MatIconModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatListModule,
+  ],
   providers: [],
   bootstrap: [AppComponent],
 })

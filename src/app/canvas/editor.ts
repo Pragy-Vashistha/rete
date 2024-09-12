@@ -10,6 +10,8 @@ import { CounterControlComponent } from '../counter-control/counter-control.comp
 import { RemoveConnectionsButtonControl } from '../controls/remove-connections-button.control';
 import { RemoveConnectionsButtonComponent } from '../remove-connections-button/remove-connections-button.component';
 import { setupPanningBoundary } from './panning-boundary';
+import { ConnectionButtonComponent } from '../connection-button/connection-button.component';
+import { ConnectionButtonControl } from '../controls/connection-button-control';
 
 // Add these new interfaces
 interface SimpleNodeData {
@@ -74,6 +76,31 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
       },
     })
   );
+  // render.addPreset(
+  //   Presets.classic.setup({
+  //     customize: {
+  //       control(data) {
+  //         if (data.payload instanceof ConnectionButtonControl) {
+  //           return ConnectionButtonComponent;
+  //         }
+  //         return null;
+  //       },
+  //     },
+  //   })
+  // );
+
+  render.addPreset(
+    Presets.classic.setup({
+      customize: {
+        control: (data) => {
+          if (data.payload instanceof ConnectionButtonControl) {
+            return ConnectionButtonComponent;
+          }
+          return null;
+        },
+      },
+    })
+  );
 
   // Use plugins
   editor.use(area);
@@ -101,7 +128,7 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
     name: string,
     initialValue: string,
     socket: ClassicPreset.Socket,
-    hasInput: boolean = false
+    hasInput: boolean = true
   ) {
     const node = new ClassicPreset.Node(name);
 
@@ -119,6 +146,12 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
       'text',
       new ClassicPreset.InputControl('text', { initial: initialValue })
     );
+
+    node.addControl(
+      'connect',
+      new ConnectionButtonControl(editor, 'connect', node, injector)
+    );
+
     if (hasInput) {
       node.addInput('in', new ClassicPreset.Input(socket));
     }
