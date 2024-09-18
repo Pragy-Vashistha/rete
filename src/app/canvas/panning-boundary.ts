@@ -40,7 +40,7 @@ export function setupPanningBoundary<S extends BaseSchemes, K extends object>({
       y: (weights.top - weights.bottom) * intensity,
     };
 
-    console.log('Calculated velocity:', velocity);
+    //console.log('Calculated velocity:', velocity);
 
     // const pickedNode = editor.getNodes().find((n) => {
     //   const isPicked = selector.isPicked({ label: 'B', id: n.id });
@@ -53,21 +53,21 @@ export function setupPanningBoundary<S extends BaseSchemes, K extends object>({
 
       // Use the selected property instead of selector.isPicked
       const isPicked = (n as any).selected;
-      console.log(`Node ${n.id} selected:`, isPicked);
+      //console.log(`Node ${n.id} selected:`, isPicked);
       return isPicked;
     });
 
-    console.log('Picked node:', pickedNode);
+    //console.log('Picked node:', pickedNode);
 
     if (pickedNode) {
       // Proceed with panning or other logic
-      console.log('Node selected for panning:', pickedNode);
+      //console.log('Node selected for panning:', pickedNode);
     } else {
-      console.log('No node picked for panning');
+      //console.log('No node picked for panning');
     }
 
     if (!pickedNode) {
-      console.warn('No node is picked for panning');
+      //console.warn('No node is picked for panning');
       return;
     }
 
@@ -75,7 +75,7 @@ export function setupPanningBoundary<S extends BaseSchemes, K extends object>({
     const view = area.nodeViews.get(pickedNode.id);
 
     if (!view) {
-      console.warn('No view found for picked node:', pickedNode.id);
+      //console.warn('No view found for picked node:', pickedNode.id);
       return;
     }
 
@@ -97,7 +97,7 @@ export function setupPanningBoundary<S extends BaseSchemes, K extends object>({
     const x = position.x - velocity.x / transform.k;
     const y = position.y - velocity.y / transform.k;
 
-    console.log('New node position:', { x, y });
+    //console.log('New node position:', { x, y });
 
     // Perform the translation for the selected node and the overall area
     await Promise.all([
@@ -105,17 +105,17 @@ export function setupPanningBoundary<S extends BaseSchemes, K extends object>({
       area.translate(pickedNode.id, { x, y }),
     ]);
 
-    console.log('Panning applied to area and node');
+    // console.log('Panning applied to area and node');
   });
 
   // Start/Stop the ticker based on node picking and dragging events
   area.addPipe((context) => {
     if (context.type === 'nodepicked') {
-      console.log('Node picked, starting ticker');
+      //console.log('Node picked, starting ticker');
       ticker.start();
     }
     if (context.type === 'nodedragged') {
-      console.log('Node dragged, stopping ticker');
+      //  console.log('Node dragged, stopping ticker');
       ticker.stop();
     }
     return context;

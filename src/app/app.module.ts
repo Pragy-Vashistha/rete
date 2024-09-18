@@ -14,6 +14,8 @@ import { ConnectionPopupComponent } from './connection-popup/connection-popup.co
 import { ConnectionButtonComponent } from './connection-button/connection-button.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { LabeledConnectionComponent } from './labeled-connection/labeled-connection.component';
+import { CommonModule } from '@angular/common';
 
 @NgModule({
   declarations: [
@@ -24,6 +26,7 @@ import { MatButtonModule } from '@angular/material/button';
     PresetNodesDrawerComponent,
     ConnectionPopupComponent,
     ConnectionButtonComponent,
+    LabeledConnectionComponent,
   ],
   imports: [
     BrowserModule,
@@ -35,7 +38,9 @@ import { MatButtonModule } from '@angular/material/button';
     MatDialogModule,
     MatButtonModule,
     MatListModule,
+    CommonModule,
   ],
+  exports: [LabeledConnectionComponent],
   providers: [],
   bootstrap: [AppComponent],
 })
