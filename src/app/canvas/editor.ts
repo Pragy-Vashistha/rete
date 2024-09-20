@@ -13,18 +13,20 @@ import { setupPanningBoundary } from './panning-boundary';
 import { ConnectionButtonComponent } from '../connection-button/connection-button.component';
 import { ConnectionButtonControl } from '../controls/connection-button-control';
 import { LabeledConnectionComponent } from '../labeled-connection/labeled-connection.component';
+import { MinimapPlugin, MinimapExtra } from 'rete-minimap-plugin';
 
-// Add these new interfaces
-interface SimpleNodeData {
-  id: string;
-  name: string;
-  position: { x: number; y: number };
-  hasInput: boolean;
+export class CustomNode extends ClassicPreset.Node {
+  width = 200;
+  height = 250;
+
+  constructor(label: string) {
+    super(label);
+  }
 }
 
 export class LabeledConnection<
-  A extends ClassicPreset.Node,
-  B extends ClassicPreset.Node
+  A extends CustomNode,
+  B extends CustomNode
 > extends ClassicPreset.Connection<A, B> {
   label?: string;
 
@@ -48,25 +50,27 @@ interface SimpleGraphData {
   nodes: SimpleNodeData[];
   connections: SimpleConnectionData[];
 }
-
+interface SimpleNodeData {
+  id: string;
+  name: string;
+  position: { x: number; y: number };
+  hasInput: boolean;
+}
 type Schemes = GetSchemes<
-  ClassicPreset.Node,
-  LabeledConnection<ClassicPreset.Node, ClassicPreset.Node>
+  CustomNode,
+  LabeledConnection<CustomNode, CustomNode>
 >;
-type AreaExtra = AngularArea2D<Schemes>;
-type Area = AreaPlugin<Schemes, AreaExtra>;
+type AreaExtra = AngularArea2D<Schemes> & MinimapExtra;
 
 export async function createEditor(container: HTMLElement, injector: Injector) {
   const socket = new ClassicPreset.Socket('socket');
 
-  // Create editor and plugins
   const editor = new NodeEditor<Schemes>();
   const area = new AreaPlugin<Schemes, AreaExtra>(container);
   const connection = new ConnectionPlugin<Schemes, AreaExtra>();
   const render = new AngularPlugin<Schemes, AreaExtra>({ injector });
 
   const selector = AreaExtensions.selector();
-  // Configure area extensions
   AreaExtensions.selectableNodes(area, selector, {
     accumulating: AreaExtensions.accumulateOnCtrl(),
   });
@@ -79,14 +83,12 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
     intensity: 3,
   });
 
-  // // Add presets
-  // render.addPreset(Presets.classic.setup());
+  const minimap = new MinimapPlugin<Schemes>();
+
   render.addPreset(
-    Presets.classic.setup({
+    Presets.classic.setup<Schemes, AreaExtra>({
       customize: {
-        connection: () => {
-          return LabeledConnectionComponent;
-        },
+        connection: () => LabeledConnectionComponent,
         control: (data) => {
           if (data.payload instanceof RemoveConnectionsButtonControl) {
             return RemoveConnectionsButtonComponent;
@@ -99,113 +101,33 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
     })
   );
 
+  render.addPreset(Presets.minimap.setup());
+
   connection.addPreset(ConnectionPresets.classic.setup());
 
-  // render.addPreset(
-  //   Presets.classic.setup({
-  //     customize: {
-  //       control: (data) => {
-  //         if (data.payload instanceof RemoveConnectionsButtonControl) {
-  //           return RemoveConnectionsButtonComponent;
-  //         }
-  //         return null;
-  //       },
-  //     },
-  //   })
-  // );
-  // render.addPreset(
-  //   Presets.classic.setup({
-  //     customize: {
-  //       control(data) {
-  //         if (data.payload instanceof ConnectionButtonControl) {
-  //           return ConnectionButtonComponent;
-  //         }
-  //         return null;
-  //       },
-  //     },
-  //   })
-  // );
-
-  // render.addPreset(
-  //   Presets.classic.setup({
-  //     customize: {
-  //       control: (data) => {
-  //         if (data.payload instanceof ConnectionButtonControl) {
-  //           return ConnectionButtonComponent;
-  //         }
-  //         return null;
-  //       },
-  //     },
-  //   })
-  // );
-
-  // Use plugins
   editor.use(area);
   area.use(connection);
   area.use(render);
 
-  // Basic node setup
-  // const nodeA = createNode('A', 'hello', socket, true);
-  // const nodeB = createNode('B', 'hello', socket, true); // true indicates it has an input
+  area.use(minimap);
 
-  // await editor.addNode(nodeA);
-  // await editor.addNode(nodeB);
-
-  // await area.translate(nodeB.id, { x: 320, y: 0 });
-
-  // // Create Connection between Node A's 'out' and Node B's 'in'
-  // await editor.addConnection(
-  //   new ClassicPreset.Connection(nodeA, 'out', nodeB, 'in')
-  // );
-
-  const a = new ClassicPreset.Node('Custom');
-  a.addOutput('a', new ClassicPreset.Output(socket));
-  a.addInput('a', new ClassicPreset.Input(socket));
-  await editor.addNode(a);
-
-  const b = new ClassicPreset.Node('Custom');
-  b.addOutput('a', new ClassicPreset.Output(socket));
-  b.addInput('a', new ClassicPreset.Input(socket));
-  await editor.addNode(b);
-
-  await area.translate(b.id, { x: 320, y: 0 });
-
-  // Create a connection with a label using the new LabeledConnection class
-  const newConnection = new LabeledConnection(
-    a,
-    'a',
-    b,
-    'a',
-    'My Connection Label'
-  );
-  await editor.addConnection(newConnection);
-
-  AreaExtensions.zoomAt(area, editor.getNodes());
-
-  // Function to create a node
   function createNode(
     name: string,
     initialValue: string,
     socket: ClassicPreset.Socket,
     hasInput: boolean = true
-  ) {
-    const node = new ClassicPreset.Node(name);
+  ): CustomNode {
+    const node = new CustomNode(name);
 
-    console.log('Creating node', node);
-
-    // Attach custom CounterControlComponent to the node
     node.addControl('counter', new CounterControlComponent());
-
     node.addControl(
       'remove-connections',
       new RemoveConnectionsButtonControl(editor, 'remove-connections', node)
     );
-
     node.addControl(
       'text',
       new ClassicPreset.InputControl('text', { initial: initialValue })
     );
-
     node.addControl(
       'connect',
       new ConnectionButtonControl(editor, 'connect', node, injector)
@@ -218,7 +140,21 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
     return node;
   }
 
-  // Function to add a new node dynamically
+  // Create and add initial nodes
+  const nodeA = createNode('A', 'Hello', socket);
+  const nodeB = createNode('B', 'World', socket);
+
+  await editor.addNode(nodeA);
+  await editor.addNode(nodeB);
+  await area.translate(nodeB.id, { x: 300, y: 0 });
+
+  // Create a connection between nodes
+  await editor.addConnection(
+    new LabeledConnection(nodeA, 'out', nodeB, 'in', 'My Connection')
+  );
+
+  AreaExtensions.zoomAt(area, editor.getNodes());
+
   const addNode = async (name: string, x: number, y: number) => {
     const node = createNode(name, name, socket);
     await editor.addNode(node);
@@ -279,13 +215,15 @@ export async function createEditor(container: HTMLElement, injector: Injector) {
     AreaExtensions.zoomAt(area, editor.getNodes());
   };
 
+  const zoomToFit = () => AreaExtensions.zoomAt(area, editor.getNodes());
+
   return {
     destroy: () => {
       area.destroy();
       panningBoundary.destroy();
     },
     addNode,
-    zoomToFit: () => AreaExtensions.zoomAt(area, editor.getNodes()),
+    zoomToFit,
     importSimpleGraph,
     exportSimpleGraph,
     clear,

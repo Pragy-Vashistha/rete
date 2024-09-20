@@ -149,6 +149,15 @@ export class CanvasComponent implements AfterViewInit {
     }
   }
 
+  zoomToFit(): void {
+    if (this.editorInstance && this.editorInstance.zoomToFit) {
+      this.editorInstance.zoomToFit();
+      console.log('Zoomed to fit all nodes');
+    } else {
+      console.error('Editor not initialized or zoomToFit method not available');
+    }
+  }
+
   deleteAllNodes(): void {
     if (this.editorInstance && this.editorInstance.clear) {
       this.editorInstance.clear();

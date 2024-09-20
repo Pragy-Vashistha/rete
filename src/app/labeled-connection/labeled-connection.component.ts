@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { ClassicPreset } from 'rete';
-import { LabeledConnection } from '../canvas/editor';
+import { LabeledConnection, CustomNode } from '../canvas/editor';
 
 @Component({
   selector: 'app-labeled-connection',
@@ -17,7 +17,7 @@ import { LabeledConnection } from '../canvas/editor';
   styleUrls: ['./labeled-connection.component.scss'],
 })
 export class LabeledConnectionComponent implements OnInit {
-  @Input() data!: LabeledConnection<ClassicPreset.Node, ClassicPreset.Node>;
+  @Input() data!: LabeledConnection<CustomNode, CustomNode>;
   @Input() start: any;
   @Input() end: any;
   @Input() path!: string;
